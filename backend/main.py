@@ -12,7 +12,7 @@ from rag import (
     build_vector_store, save_vector_store,
     load_vector_store, ask
 )
-from voice import transcribe_audio, text_to_speech
+from voice import transcribe_audio
 from auth import get_current_user
 
 # Create tables
@@ -147,13 +147,7 @@ async def transcribe_voice(
     finally:
         os.unlink(tmp_path)
 
-@app.post("/speak")
-async def speak(
-    text: str = Form(...),
-    current_user=Depends(get_current_user)
-):
-    audio_path = text_to_speech(text, "response.mp3")
-    return FileResponse(audio_path, media_type="audio/mpeg")
+
 
 @app.post("/clear")
 def clear_chat(current_user=Depends(get_current_user)):

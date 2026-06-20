@@ -3,8 +3,7 @@ import { useDropzone } from "react-dropzone";
 import API from "../api";
 import {
   FiUpload, FiFile, FiCheckCircle,
-  FiClock, FiVolume2, FiTrash2,
-  FiFolder, FiSettings
+  FiClock, FiTrash2, FiFolder, FiSettings
 } from "react-icons/fi";
 
 const PIPELINE_STEPS = [
@@ -20,8 +19,6 @@ export default function Sidebar({
   setMessages,
   useMemory,
   setUseMemory,
-  voiceOutput,
-  setVoiceOutput,
   pipelineStage,
   setPipelineStage,
   fetchStatus,
@@ -47,7 +44,6 @@ export default function Sidebar({
     multiple: true,
   });
 
-  // ── Process uploaded files ────────────────────────────────────
   const processFiles = async () => {
     if (uploadedFiles.length === 0) return;
     setUploading(true);
@@ -58,7 +54,6 @@ export default function Sidebar({
     uploadedFiles.forEach((f) => formData.append("files", f));
 
     try {
-      // Show pipeline steps animating
       setPipelineStage("upload");
       await new Promise((r) => setTimeout(r, 300));
       setCompletedSteps(["upload"]);
@@ -69,13 +64,11 @@ export default function Sidebar({
 
       setPipelineStage("embed");
 
-      // Actual API call
       const res = await API.post("/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 300000, // 5 minutes for large files
+        timeout: 300000,
       });
 
-      // Success
       setCompletedSteps((p) => [...p, "embed", "ready"]);
       setPipelineStage("ready");
       setError("");
@@ -91,11 +84,9 @@ export default function Sidebar({
       setUploadedFiles([]);
 
     } catch (e) {
-      // Check if upload actually succeeded despite the error
       try {
         const statusRes = await API.get("/status");
         if (statusRes.data.vector_store_loaded) {
-          // It worked — just a timeout or network hiccup
           setError("");
           setCompletedSteps(["upload", "chunk", "embed", "ready"]);
           setPipelineStage("ready");
@@ -109,11 +100,8 @@ export default function Sidebar({
           setUploadedFiles([]);
           return;
         }
-      } catch (_) {
-        // Status check also failed
-      }
+      } catch (_) {}
 
-      // Real failure
       setError(
         e.response?.data?.detail ||
         "Upload failed. Make sure backend is running on port 8000."
@@ -126,7 +114,6 @@ export default function Sidebar({
     }
   };
 
-  // ── Load saved FAISS index from disk ─────────────────────────
   const loadSavedIndex = async () => {
     setError("");
     try {
@@ -145,7 +132,6 @@ export default function Sidebar({
     }
   };
 
-  // ── Clear chat history ────────────────────────────────────────
   const clearChat = async () => {
     try {
       await API.post("/clear");
@@ -159,20 +145,17 @@ export default function Sidebar({
   return (
     <div className="sidebar">
 
-      {/* ── Header ──────────────────────────────────────────── */}
       <div className="sidebar-header">
         <div className="sidebar-logo">🤖</div>
         <div>
           <div className="sidebar-title">Enterprise Chatbot</div>
-          <div className="sidebar-subtitle">Text · Document · Voice</div>
+          <div className="sidebar-subtitle">Text · Document</div>
         </div>
       </div>
 
-      {/* ── Upload Section ───────────────────────────────────── */}
       <div className="sidebar-section">
         <div className="section-label">📄 Upload Documents</div>
 
-        {/* Dropzone */}
         <div
           {...getRootProps()}
           className={`dropzone ${isDragActive ? "dropzone-active" : ""}`}
@@ -187,7 +170,6 @@ export default function Sidebar({
           <div className="dropzone-hint">PDF · DOCX · XLSX · TXT</div>
         </div>
 
-        {/* Files queued for upload */}
         {uploadedFiles.length > 0 && (
           <div className="file-list">
             {uploadedFiles.map((f, i) => (
@@ -202,10 +184,8 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* Error message */}
         {error && <div className="error-box">⚠️ {error}</div>}
 
-        {/* Process button */}
         <button
           className="btn-primary"
           onClick={processFiles}
@@ -214,13 +194,11 @@ export default function Sidebar({
           {uploading ? "⏳ Processing..." : "⚙️ Process Documents"}
         </button>
 
-        {/* Load saved index */}
         <button className="btn-secondary" onClick={loadSavedIndex}>
           <FiFolder size={14} /> Load Saved Index
         </button>
       </div>
 
-      {/* ── Pipeline Status ──────────────────────────────────── */}
       <div className="sidebar-section">
         <div className="section-label">🔄 Pipeline Status</div>
         <div className="pipeline-steps">
@@ -246,7 +224,6 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* ── Indexed Files ────────────────────────────────────── */}
       {status.indexed_files?.length > 0 && (
         <div className="sidebar-section">
           <div className="section-label">📁 Indexed Files</div>
@@ -259,7 +236,6 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* ── Settings ─────────────────────────────────────────── */}
       <div className="sidebar-section sidebar-settings">
         <div className="section-label">⚙️ Settings</div>
 
@@ -269,15 +245,6 @@ export default function Sidebar({
           <div
             className={`toggle ${useMemory ? "toggle-on" : ""}`}
             onClick={() => setUseMemory(!useMemory)}
-          />
-        </label>
-
-        <label className="toggle-row">
-          <FiVolume2 size={14} color="#569cd6" />
-          <span>Speak answers</span>
-          <div
-            className={`toggle ${voiceOutput ? "toggle-on" : ""}`}
-            onClick={() => setVoiceOutput(!voiceOutput)}
           />
         </label>
 

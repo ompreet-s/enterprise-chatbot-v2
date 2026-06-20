@@ -8,7 +8,6 @@ export default function ChatArea({
   setMessages,
   status,
   useMemory,
-  voiceOutput,
   loading,
   setLoading,
   fetchStatus,
@@ -16,14 +15,12 @@ export default function ChatArea({
   setSessionId,
 }) {
   const [input, setInput] = useState("");
-  const bottomRef         = useRef(null);
+  const bottomRef = useRef(null);
 
-  // Auto scroll to bottom on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // ── Send message ──────────────────────────────────────────────
   const sendMessage = async (questionText) => {
     const question = questionText || input.trim();
     if (!question || !status.vector_store_loaded) return;
@@ -31,44 +28,40 @@ export default function ChatArea({
     setInput("");
     setLoading(true);
 
-    // Show user message immediately
     setMessages((prev) => [
       ...prev,
       {
-        role:      "user",
-        content:   question,
+        role: "user",
+        content: question,
         timestamp: new Date().toLocaleTimeString(),
       },
     ]);
 
     try {
-      // Call RAG pipeline
       const res = await API.post("/ask", {
         question,
         use_memory: useMemory,
       });
 
-      // Show assistant answer
       setMessages((prev) => [
         ...prev,
         {
-          role:      "assistant",
-          content:   res.data.answer,
-          sources:   res.data.sources,
+          role: "assistant",
+          content: res.data.answer,
+          sources: res.data.sources,
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
 
       await fetchStatus();
 
-      // Save both messages to history database
       try {
         const saved = await API.post("/history/message", {
           session_id: sessionId || null,
-          role:       "user",
-          content:    question,
-          sources:    [],
-          documents:  status.indexed_files || [],
+          role: "user",
+          content: question,
+          sources: [],
+          documents: status.indexed_files || [],
         });
 
         const sid = saved.data.session_id;
@@ -76,35 +69,21 @@ export default function ChatArea({
 
         await API.post("/history/message", {
           session_id: sid,
-          role:       "assistant",
-          content:    res.data.answer,
-          sources:    res.data.sources || [],
-          documents:  [],
+          role: "assistant",
+          content: res.data.answer,
+          sources: res.data.sources || [],
+          documents: [],
         });
       } catch (e) {
         console.warn("History save failed:", e);
-      }
-
-      // Speak answer if toggle is on
-      if (voiceOutput) {
-        try {
-          const fd = new FormData();
-          fd.append("text", res.data.answer.slice(0, 400));
-          const audio = await API.post("/speak", fd, {
-            responseType: "blob",
-          });
-          new Audio(URL.createObjectURL(audio.data)).play();
-        } catch (e) {
-          console.warn("TTS failed:", e);
-        }
       }
     } catch (e) {
       setMessages((prev) => [
         ...prev,
         {
-          role:      "assistant",
-          content:   `❌ Error: ${e.response?.data?.detail || "Something went wrong."}`,
-          sources:   [],
+          role: "assistant",
+          content: `Error: ${e.response?.data?.detail || "Something went wrong."}`,
+          sources: [],
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
@@ -113,7 +92,6 @@ export default function ChatArea({
     }
   };
 
-  // Enter key sends message
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -123,8 +101,6 @@ export default function ChatArea({
 
   return (
     <div className="chat-area">
-
-      {/* ── Status bar ──────────────────────────────────────── */}
       <div className="chat-topbar">
         <div className="chat-topbar-title">
           {status.vector_store_loaded ? (
@@ -144,15 +120,12 @@ export default function ChatArea({
         </div>
         {useMemory && (
           <div className="memory-badge">
-            🧠 Memory: {status.total_messages || 0} messages
+            Memory: {status.total_messages || 0} messages
           </div>
         )}
       </div>
 
-      {/* ── Messages ────────────────────────────────────────── */}
       <div className="messages-container">
-
-        {/* Empty state */}
         {messages.length === 0 && (
           <div className="empty-state">
             <div className="empty-icon">🤖</div>
@@ -181,12 +154,10 @@ export default function ChatArea({
           </div>
         )}
 
-        {/* Message list */}
         {messages.map((msg, i) => (
           <Message key={i} message={msg} />
         ))}
 
-        {/* Loading dots while waiting for answer */}
         {loading && (
           <div className="message assistant-message">
             <div className="message-avatar">🤖</div>
@@ -201,11 +172,8 @@ export default function ChatArea({
         <div ref={bottomRef} />
       </div>
 
-      {/* ── Input bar ───────────────────────────────────────── */}
       <div className="input-bar">
         <div className="input-wrapper">
-
-          {/* Text input */}
           <textarea
             className="chat-input"
             value={input}
@@ -220,30 +188,21 @@ export default function ChatArea({
             rows={1}
           />
 
-          {/* Send button only — no mic */}
           <div className="input-actions">
             <button
               className={`send-btn ${
-                input.trim() && status.vector_store_loaded
-                  ? "send-btn-active"
-                  : ""
+                input.trim() && status.vector_store_loaded ? "send-btn-active" : ""
               }`}
               onClick={() => sendMessage()}
-              disabled={
-                loading || !input.trim() || !status.vector_store_loaded
-              }
+              disabled={loading || !input.trim() || !status.vector_store_loaded}
             >
               <FiSend size={18} />
             </button>
           </div>
-
         </div>
 
-        <div className="input-hint">
-          Enter to send · Shift+Enter for new line
-        </div>
+        <div className="input-hint">Enter to send · Shift+Enter for new line</div>
       </div>
-
     </div>
   );
 }
