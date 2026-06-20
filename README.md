@@ -2,8 +2,6 @@
 
 An AI-powered document Q&A system that lets you upload documents and ask questions about them in natural language — powered by RAG (Retrieval-Augmented Generation), LLaMA 3.3, and FAISS.
 
-![Enterprise Chatbot Screenshot](frontend/src/assets/Screenshot%202026-06-19%20110829.png)
-
 🔗 **Repository:** [github.com/ompreet-s/enterprise-chatbot-v2](https://github.com/ompreet-s/enterprise-chatbot-v2)
 
 ---
@@ -12,7 +10,6 @@ An AI-powered document Q&A system that lets you upload documents and ask questio
 
 - 📄 **Multi-format document support** — PDF, DOCX, XLSX, TXT
 - 🔍 **High-accuracy RAG pipeline** — query expansion + reranking + self-verification
-- 🎙️ **Voice input** — speak your questions using Whisper transcription
 - 🧠 **Conversation memory** — remembers context across a chat session
 - 🔐 **Authentication** — JWT-based login and registration with bcrypt password hashing
 - 📋 **Chat history** — every conversation saved and searchable, with reload support
@@ -30,7 +27,6 @@ An AI-powered document Q&A system that lets you upload documents and ask questio
 | Embeddings | BAAI/bge-large-en-v1.5 (HuggingFace) |
 | Vector Store | FAISS |
 | Reranker | CrossEncoder (ms-marco-MiniLM) |
-| Speech-to-Text | OpenAI Whisper |
 | Database | SQLite + SQLAlchemy |
 | Auth | JWT + bcrypt |
 
@@ -153,8 +149,8 @@ enterprise-chatbot-v2/
 │   │       ├── ChatArea.jsx
 │   │       └── Message.jsx
 │   └── package.json
-├── assets/
-│   └── screenshot.png
+├
+│   
 └── README.md
 ```
 
